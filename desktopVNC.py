@@ -118,8 +118,8 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle("-Gözde Uygulama-")
         self.label_3.setText("-")
         self.label_4.setText("-")
-        self.label.setText(self.comboBox.currentText())  # ilk basta hangi secenek varsa onu yazması için (generic)
-        self.label_2.setText("-")  # ok'a basılmadan bi şey yazılı olmaması
+        self.label.setText(self.comboBox.currentText())  # set current text
+        self.label_2.setText("-")  
 
 
 #ACTIONS
@@ -146,7 +146,7 @@ class Ui_MainWindow(object):
         print(data)
         for x in data:
             print(xwindowslist.nameofid(x))
-            self.comboBox.addItem(str(xwindowslist.nameofid(x)[0]))  # xwindowslistten çektim combo box'a koydum
+            self.comboBox.addItem(str(xwindowslist.nameofid(x)[0]))  # from xwindowslist put them into the combo box
 
 
     def opencombo(self):
@@ -162,27 +162,20 @@ class Ui_MainWindow(object):
 
     def rootac(self):
 
-        # !çalışmıyor
-        print("elma1")
-
         bilgi = self.label_2.text()
-
         command = 'DISPLAY=:1 pkexec x11vnc -id ' + bilgi # + ' > /dev/null 2>&1 &'
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
         proc.wait()
         (out, err) = proc.communicate()
-        print("elma2")
-
-        #yeniliyoruz
-        self.listWidget.clear()  # tüm listeyi temizledim cunku guncel liste olusturacagım
+        self.listWidget.clear()  # to renew the list
 
         command = "ps aux | grep x11vnc"
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
         (out, err) = proc.communicate()
         basedata = str(out).split("\\n")
-        basedata = basedata[:-1]  # basedata oluşturuldu
+        basedata = basedata[:-1]  # basedata created
 
-        for x in basedata:  # basedatadakileri listeye ekledim
+        for x in basedata:  # basedatada added to the list
             if not "grep x11vnc" in x:
                 self.listWidget.addItem(str(x))
 
@@ -214,9 +207,9 @@ class Ui_MainWindow(object):
 
     def cikti(self):
 
-        item_ = self.comboBox.currentText() #string tipinde
+        item_ = self.comboBox.currentText() # type: string
         list_id = []
-        list_id = xwindowslist.idofwindows() #xwindowslist.idofwindows() id döndürüyor list tipinde
+        list_id = xwindowslist.idofwindows() # xwindowslist.idofwindows() returns an id. type: list
         i1 = 0
         for i in list_id:
             if (item_ == str(xwindowslist.nameofid(i)[0])): #['Xfdesktop', 'Desktop']
@@ -250,49 +243,42 @@ class Ui_MainWindow(object):
 
     def yenile(self):
 
-        self.listWidget.clear()  # tüm listeyi temizledim cunku guncel liste olusturacagım
+        self.listWidget.clear()  # to renew the list
 
         command = "ps aux | grep x11vnc"
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
         (out, err) = proc.communicate()
         basedata = str(out).split("\\n")
-        basedata = basedata[:-1] #basedata oluşturuldu
+        basedata = basedata[:-1] #basedata created
 
-        for x in basedata:  #basedatadakileri listeye ekledim
+        for x in basedata:
             if not "grep x11vnc" in x:
                 self.listWidget.addItem(str(x))
 
     def remove(self):
-        item = self.listWidget.currentItem() #listedeki secili item #
+        item = self.listWidget.currentItem()
         item = item.text()
         split1 = item.split(" ")
-        split2 = list(filter(None, split1)) #pid değerine ulaştım basedatadaki
+        split2 = list(filter(None, split1)) # equals to pid value
         pid = int(split2[1])
 
-        try: #root olmayan kullanıcı için kill yapmaya çalıştı
+        try: #kill for non root user
             os.kill(pid, SIGKILL)
-            print("kavun")
             item1 = self.listWidget.selectedItems()
             for counter in item1:
-                print("elma")
                 self.listWidget.takeItem(self.listWidget.row(counter))
-                print("armut")
 
         except OSError as e:
             err=e
-            print("karpuz")
 
-            if "Operation not permitted" in str(err):  # kill ile olmuyorsa pkexec kullansın
+            if "Operation not permitted" in str(err):  # instead of kill use pkexec
                 print("kiraz")
                 command = "pkexec kill " + str(pid)
                 proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
                 (out, err) = proc.communicate()
-
                 item = self.listWidget.selectedItems()
                 for counter in item:
                   self.listWidget.takeItem(self.listWidget.row(counter))
-
-        print("papatya")
 
         if self.listWidget.count() == 0:
             self.pushButton.setEnabled(False)
@@ -303,25 +289,18 @@ class Ui_MainWindow(object):
 
     def pidalportver(self):
 
-        item = self.listWidget.currentItem()  # listedeki secili item #
+        item = self.listWidget.currentItem()
         item = item.text()
         split1 = item.split(" ")
-        split2 = list(filter(None, split1))  # pid değerine ulaştım basedatadaki
+        split2 = list(filter(None, split1))  # pid value in basedatada
         pid = int(split2[1])
 
         command = "lsof -p " + str(pid) + " | grep LISTEN | head -1"
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
         (out, err) = proc.communicate()
-        print(out)
-        print("kaplumbaga")
         new_out = str(out).split("*:") # 5901 (LISTEN)\n'
-        print(new_out)
-        print("summer")
         new_out = str(new_out[1]).split(" ") #['5901', "(LISTEN)\\n'"]
-        print(new_out)
-        print("winter")
-
-        portnumber = str(new_out[0]) #port number budur = 5901
+        portnumber = str(new_out[0]) #port = 5901
 
         self.label_3.setText("PORT=" + portnumber)
 
